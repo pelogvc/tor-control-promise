@@ -33,6 +33,7 @@ HashedControlPassword 16:AEBC98A6777A318660659EC88648EF43EDACF4C20D564B20FF244E8
 ```
 ## Example
 ```js
+const tor_control = require('tor-control-promise');
 const tor = new tor_control({
     host: 'localhost',
     port: 9051,
