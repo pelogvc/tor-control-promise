@@ -1,0 +1,19 @@
+{
+  "name": "tor-control-promise",
+  "version": "1.0.0",
+  "description": "communicate tor-control",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pelogvc/tor-control-promise.git"
+  },
+  "author": "pelogvc",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pelogvc/tor-control-promise/issues"
+  },
+  "homepage": "https://github.com/pelogvc/tor-control-promise#readme"
+}
