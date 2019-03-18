@@ -19,6 +19,14 @@ let control = function control({ host, port, password }) {
                 host: self.opts.host,
                 port: self.opts.port,
             });
+
+            self.connection.on('error', function (err) {
+                reject({
+                    type: 0,
+                    message: err,
+                    data: err,
+                });
+            });
         
             self.connection.on('data', function (data) {
                 data = data.toString();
