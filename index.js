@@ -1,6 +1,6 @@
-var net = require('net');
+const net = require('net');
 
-let control = function control({ host, port, password }) {
+let control = function ({ host, port, password }) {
 
     let self = this;
 
@@ -12,7 +12,7 @@ let control = function control({ host, port, password }) {
 
     this.connection = null;
 
-    this.connect = function connect() {
+    this.connect = function () {
         return new Promise(function (resolve, reject) {
 
             self.connection = net.connect({
@@ -31,7 +31,7 @@ let control = function control({ host, port, password }) {
             self.connection.on('data', function (data) {
                 data = data.toString();
                 let ret = /([0-9]{1,3})\s(.*)\r\n/.exec(data);
-                if ( ret[0] !== 250 ) {
+                if ( ret !== null && parseInt(ret[1]) === 250 ) {
                     resolve({
                         type: parseInt(ret[1]),
                         message: ret[2],
@@ -49,7 +49,7 @@ let control = function control({ host, port, password }) {
         });
     }
     
-    this.sendCommand = function sendCommand(command) {
+    this.sendCommand = function (command) {
         return new Promise(function (resolve, reject) {
 
             if (!self.connection) {
@@ -71,18 +71,19 @@ let control = function control({ host, port, password }) {
             self.connection.on('data', function (data) {
                 data = data.toString();
                 let ret = /([0-9]{1,3})\s(.*)\r\n/.exec(data);
-                if (ret[0]) {
+                try {
                     resolve({
                         type: parseInt(ret[1]),
                         message: ret[2],
                         data: data,
                     })
+                }catch(e){
+                    reject({
+                        type: 0,
+                        message: 'Failed parsing data',
+                        data: data,
+                    });
                 }
-                reject({
-                    type: 0,
-                    message: 'Failed parsing data',
-                    data: data,
-                });
             });
 
             self.connection.write(command + '\r\n');
@@ -96,73 +97,73 @@ Refrenece by https://github.com/atd-schubert/node-tor-control/blob/master/index.
              https://gitweb.torproject.org/torspec.git/tree/control-spec.txt
 */
 control.prototype = {
-    sendCommand: function sendCommand(command) {
+    sendCommand: function (command) {
        return this.sendCommand(command);
     },
-    connect: function connect() {
+    connect: function () {
         return this.connect();
     },
-    quit: function quit() {
+    quit: function () {
         return this.sendCommand('QUIT');
     },
-    setConf: function setConf(request) { // Chapter 3.1
+    setConf: function (request) { // Chapter 3.1
         return this.sendCommand('SETCONF ' + request);
     },
-    resetConf: function resetConf(request) { // Chapter 3.2
+    resetConf: function (request) { // Chapter 3.2
         return this.sendCommand('RESETCONF ' + request);
     },
-    getConf: function getConf(request) { // Chapter 3.3
+    getConf: function (request) { // Chapter 3.3
         return this.sendCommand('GETCONF ' + request);
     },
-    getEvents: function getEvents(request) { // Chapter 3.4
+    getEvents: function (request) { // Chapter 3.4
         return this.sendCommand('GETEVENTS ' + request);
     },
-    saveConf: function saveConf(request) { // Chapter 3.6
+    saveConf: function (request) { // Chapter 3.6
         return this.sendCommand('SAVECONF ' + request);
     },
 
     // Signals:
-    signal: function sendSignalToTorCOntrol(signal) { // Chapter 3.7
+    signal: function (signal) { // Chapter 3.7
         return this.sendCommand('SIGNAL ' + signal);
     },
-    signalReload: function sendSignalReload() {
+    signalReload: function () {
         return this.signal('RELOAD');
     },
-    signalHup: function sendSignalHup() {
+    signalHup: function () {
         return this.signal('HUP');
     },
-    signalShutdown: function sendSignalShutdown() {
+    signalShutdown: function () {
         return this.signal('SHUTDOWN');
     },
-    signalDump: function sendSignalDump() {
+    signalDump: function () {
         return this.signal('DUMP');
     },
-    signalUsr1: function sendSignalUsr1() {
+    signalUsr1: function () {
         return this.signal('USR1');
     },
-    signalDebug: function sendSignalDegug() {
+    signalDebug: function () {
         return this.signal('DEBUG');
     },
-    signalUsr2: function sendSignalUsr2() {
+    signalUsr2: function () {
         return this.signal('USR2');
     },
-    signalHalt: function sendSignalHalt() {
+    signalHalt: function () {
         return this.signal('HALT');
     },
-    signalTerm: function sendSignalTerm() {
+    signalTerm: function () {
         return this.signal('TERM');
     },
-    signalInt: function sendSignalInt() {
+    signalInt: function () {
         return this.signal('INT');
     },
-    signalNewnym: function sendSignalNewNym() {
+    signalNewnym: function () {
         return this.signal('NEWNYM');
     },
-    signalCleardnscache: function sendSignalClearDnsCache() {
+    signalCleardnscache: function () {
         return this.signal('CLEARDNSCACHE');
     },
 
-    mapAddress: function mapAddress(address) { // Chapter 3.8
+    mapAddress: function (address) { // Chapter 3.8
         return this.sendCommand('MAPADDRESS ' + address);
     },
     getInfo: function (request) { // Chapter 3.9
