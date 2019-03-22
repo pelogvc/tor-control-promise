@@ -1,26 +1,27 @@
-const net = require('net');
+'use strict';
 
-let control = function ({ host, port, password }) {
+const net = require('net')
 
-    let self = this;
+class Tor {
 
-    this.opts = {
-        'host': host || 'localhost',
-        'port': port || 9051,
-        'password': password || '',
+    constructor({ host, port, password } = {}) {
+        
+        this.opts = {
+            'host': host || 'localhost',
+            'port': port || 9051,
+            'password': password || '',
+        }
     }
 
-    this.connection = null;
+    connect() {
+        return new Promise((resolve, reject) => {
 
-    this.connect = function () {
-        return new Promise(function (resolve, reject) {
-
-            self.connection = net.connect({
-                host: self.opts.host,
-                port: self.opts.port,
+            this.connection = net.connect({
+                host: this.opts.host,
+                port: this.opts.port,
             });
 
-            self.connection.on('error', function (err) {
+            this.connection.on('error', function (err) {
                 reject({
                     type: 0,
                     message: err,
@@ -28,7 +29,7 @@ let control = function ({ host, port, password }) {
                 });
             });
         
-            self.connection.on('data', function (data) {
+            this.connection.on('data', function (data) {
                 data = data.toString();
                 let ret = /([0-9]{1,3})\s(.*)\r\n/.exec(data);
                 if ( ret !== null && parseInt(ret[1]) === 250 ) {
@@ -45,14 +46,16 @@ let control = function ({ host, port, password }) {
                 });
             });
 
-            self.connection.write('AUTHENTICATE "' + self.opts.password + '"\r\n'); // Chapter 3.5
+            this.connection.write('AUTHENTICATE "' + this.opts.password + '"\r\n'); // Chapter 3.5
         });
     }
     
-    this.sendCommand = function (command) {
-        return new Promise(function (resolve, reject) {
+    sendCommand(command) {
+        return new Promise((resolve, reject) => {
 
-            if (!self.connection) {
+            //resolve(this);
+
+            if (this.connection === undefined) {
                 reject({
                     type: 0,
                     message: 'Need a socket connection (please call connect function)',
@@ -60,7 +63,7 @@ let control = function ({ host, port, password }) {
                 })
             }
             
-            self.connection.on('error', function (err) {
+            this.connection.on('error', function (err) {
                 reject({
                     type: 0,
                     message: err,
@@ -68,7 +71,7 @@ let control = function ({ host, port, password }) {
                 });
             });
         
-            self.connection.on('data', function (data) {
+            this.connection.on('data', function (data) {
                 data = data.toString();
                 let ret = /([0-9]{1,3})\s(.*)\r\n/.exec(data);
                 try {
@@ -86,93 +89,83 @@ let control = function ({ host, port, password }) {
                 }
             });
 
-            self.connection.write(command + '\r\n');
+            this.connection.write(command + '\r\n');
         });
     }
-    
-}
 
-/*
-Refrenece by https://github.com/atd-schubert/node-tor-control/blob/master/index.js
-             https://gitweb.torproject.org/torspec.git/tree/control-spec.txt
-*/
-control.prototype = {
-    sendCommand: function (command) {
-       return this.sendCommand(command);
-    },
-    connect: function () {
-        return this.connect();
-    },
-    quit: function () {
+    /*
+    Refrenece by https://github.com/atd-schubert/node-tor-control/blob/master/index.js
+                https://gitweb.torproject.org/torspec.git/tree/control-spec.txt
+    */
+    quit () {
         return this.sendCommand('QUIT');
-    },
-    setConf: function (request) { // Chapter 3.1
+    }
+    setConf (request) { // Chapter 3.1
         return this.sendCommand('SETCONF ' + request);
-    },
-    resetConf: function (request) { // Chapter 3.2
+    }
+    resetConf (request) { // Chapter 3.2
         return this.sendCommand('RESETCONF ' + request);
-    },
-    getConf: function (request) { // Chapter 3.3
+    }
+    getConf (request) { // Chapter 3.3
         return this.sendCommand('GETCONF ' + request);
-    },
-    getEvents: function (request) { // Chapter 3.4
+    }
+    getEvents (request) { // Chapter 3.4
         return this.sendCommand('GETEVENTS ' + request);
-    },
-    saveConf: function (request) { // Chapter 3.6
+    }
+    saveConf (request) { // Chapter 3.6
         return this.sendCommand('SAVECONF ' + request);
-    },
-
+    }
     // Signals:
-    signal: function (signal) { // Chapter 3.7
+    signal (signal) { // Chapter 3.7
         return this.sendCommand('SIGNAL ' + signal);
-    },
-    signalReload: function () {
+    }
+    signalReload () {
         return this.signal('RELOAD');
-    },
-    signalHup: function () {
+    }
+    signalHup () {
         return this.signal('HUP');
-    },
-    signalShutdown: function () {
+    }
+    signalShutdown () {
         return this.signal('SHUTDOWN');
-    },
-    signalDump: function () {
+    }
+    signalDump () {
         return this.signal('DUMP');
-    },
-    signalUsr1: function () {
+    }
+    signalUsr1 () {
         return this.signal('USR1');
-    },
-    signalDebug: function () {
+    }
+    signalDebug () {
         return this.signal('DEBUG');
-    },
-    signalUsr2: function () {
+    }
+    signalUsr2 () {
         return this.signal('USR2');
-    },
-    signalHalt: function () {
+    }
+    signalHalt () {
         return this.signal('HALT');
-    },
-    signalTerm: function () {
+    }
+    signalTerm () {
         return this.signal('TERM');
-    },
-    signalInt: function () {
+    }
+    signalInt () {
         return this.signal('INT');
-    },
-    signalNewnym: function () {
+    }
+    signalNewnym () {
         return this.signal('NEWNYM');
-    },
-    signalCleardnscache: function () {
+    }
+    signalCleardnscache () {
         return this.signal('CLEARDNSCACHE');
-    },
+    }
 
-    mapAddress: function (address) { // Chapter 3.8
+    mapAddress (address) { // Chapter 3.8
         return this.sendCommand('MAPADDRESS ' + address);
-    },
-    getInfo: function (request) { // Chapter 3.9
+    }
+    getInfo (request) { // Chapter 3.9
         if (!Array.prototype.isPrototypeOf(request)) {
             request = [request];
         }
         return this.sendCommand('GETINFO ' + request.join(' '));
-    },
-    extendCircuit: function (id, superspec, purpose) { // Chapter 3.10
+    }
+    extendCircuit (id, superspec, purpose) { // Chapter 3.10
         var str = 'EXTENDCIRCUIT ' + id;
         if (superspec) {
             str += ' ' + superspec;
@@ -181,14 +174,14 @@ control.prototype = {
             str += ' ' + purpose;
         }
         return this.sendCommand(str);
-    },
-    setCircuitPurpose: function (id, purpose) { // Chapter 3.11
+    }
+    setCircuitPurpose (id, purpose) { // Chapter 3.11
         return this.sendCommand('SETCIRCUITPURPOSE ' + id + ' purpose=' + purpose);
-    },
-    setRouterPurpose: function (nicknameOrKey, purpose) { // Chapter 3.12
+    }
+    setRouterPurpose (nicknameOrKey, purpose) { // Chapter 3.12
         return this.sendCommand('SETROUTERPURPOSE ' + nicknameOrKey + ' ' + purpose);
-    },
-    attachStream: function (streamId, circuitId, hop) { // Chapter 3.13
+    }
+    attachStream (streamId, circuitId, hop) { // Chapter 3.13
         let str = 'ATTACHSTREAM ' + streamId + ' ' + circuitId;
 
         if (hop) {
@@ -196,7 +189,8 @@ control.prototype = {
         }
 
         return this.sendCommand(str);
-    },
+    }
+    
 }
 
-module.exports = control;
+module.exports = Tor; 
